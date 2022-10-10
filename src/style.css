@@ -1,0 +1,117 @@
+/* Reset start */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-transform: none;
+}
+
+button,
+input,
+textarea {
+  border: none;
+  outline: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Reset end */
+
+:root {
+  --text-primary: #000;
+  --border-base-color: #cfcfcf;
+  --border-focus-color: #1371c8;
+  --btn-color: #ff8663;
+  --btn-hover-color: #e97454;
+  --btn-text-color: #fff;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+}
+
+#map {
+  height: 100vh;
+  background-color: var(--text-primary);
+}
+
+.balloon {
+  width: 353px;
+}
+
+.balloon__title {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 18px;
+  color: #000;
+}
+
+.balloon__form {
+  display: flex;
+  flex-direction: column;
+}
+
+.balloon__input {
+  font-size: 14px;
+  line-height: 16px;
+  color: #000;
+  border: 1px solid var(--border-base-color);
+  padding: 11px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
+.balloon__form textarea.balloon__input {
+  height: 98px;
+  resize: none;
+}
+
+.balloon__input:last-child {
+  margin-bottom: 0;
+}
+
+.balloon__input:focus {
+  border-color: var(--border-focus-color);
+}
+
+.balloon__input::placeholder {
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.balloon__btn {
+  color: var(--btn-text-color);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 16px;
+  background-color: var(--btn-color);
+  transition: 0.2s;
+  padding: 10px 16px;
+  border-radius: 3px;
+}
+
+.balloon__btn:hover {
+  background-color: var(--btn-hover-color);
+}
