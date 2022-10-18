@@ -36,6 +36,7 @@ button {
 
 :root {
   --text-primary: #000;
+  --text-secondary: #8f8f8f;
   --border-base-color: #cfcfcf;
   --border-focus-color: #1371c8;
   --btn-color: #ff8663;
@@ -55,20 +56,16 @@ body {
   background-color: var(--text-primary);
 }
 
-.balloon {
-  width: 353px;
-}
-
 .balloon__title {
   margin-top: 10px;
   margin-bottom: 20px;
   font-weight: 700;
   font-size: 16px;
   line-height: 18px;
-  color: #000;
+  color: var(--text-primary);
 }
 
-.balloon__form {
+.balloon__inner {
   display: flex;
   flex-direction: column;
 }
@@ -76,14 +73,15 @@ body {
 .balloon__input {
   font-size: 14px;
   line-height: 16px;
-  color: #000;
+  color: var(--text-primary);
   border: 1px solid var(--border-base-color);
   padding: 11px;
   border-radius: 3px;
   margin-bottom: 10px;
+  width: 310px;
 }
 
-.balloon__form textarea.balloon__input {
+.balloon textarea.balloon__input {
   height: 98px;
   resize: none;
 }
@@ -114,4 +112,37 @@ body {
 
 .balloon__btn:hover {
   background-color: var(--btn-hover-color);
+}
+
+.balloon__footer {
+  margin-top: 10px;
+}
+
+.balloon__review-list > li:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+.review__header {
+  display: flex;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 18px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.review__header > div {
+  margin-right: 6px;
+}
+
+.review__place,
+.review__date,
+.review__message {
+  color: var(--text-secondary);
+}
+
+.review__message {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 18px;
 }
