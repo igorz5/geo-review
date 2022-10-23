@@ -48,6 +48,8 @@ module.exports = {
     }),
     new MiniCssExtractPlugin(),
     new CleanWebpackPlugin(["dist"]),
-    new DotEnv(),
+    new DotEnv({
+      systemvars: true,
+    }),
   ],
 };
