@@ -56,6 +56,10 @@ body {
   background-color: var(--text-primary);
 }
 
+.balloon {
+  padding-right: 10px;
+}
+
 .balloon__title {
   margin-top: 10px;
   margin-bottom: 20px;

@@ -64,6 +64,8 @@ export default class App {
         message,
       });
 
+      console.log(name);
+
       this.clusterer.removeAll();
       this.loadPlacemarks();
 
