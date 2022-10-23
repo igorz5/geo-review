@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "webpack --progress --colors --mode production",
+    "build": "webpack --progress --mode production",
     "watch": "webpack serve --progress --open --mode development",
     "start": "yarn watch",
     "lint": "eslint ./src",
