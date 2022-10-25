@@ -15,7 +15,7 @@ ol {
 
 a {
   color: inherit;
-  text-transform: none;
+  text-decoration: none;
 }
 
 button,
@@ -38,7 +38,9 @@ button {
   --text-primary: #000;
   --text-secondary: #8f8f8f;
   --border-base-color: #cfcfcf;
-  --border-focus-color: #1371c8;
+  --border-focus-color: #3474b1;
+  --primary-color: #ff8663;
+  --link-color: #4394e0;
   --btn-color: #ff8663;
   --btn-hover-color: #e97454;
   --btn-text-color: #fff;
@@ -59,6 +61,22 @@ body {
 .balloon {
   max-width: 353px;
   padding-right: 10px;
+}
+
+.balloon__link {
+  display: inline-block;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 14px;
+  color: var(--link-color);
+}
+
+.balloon__address-link {
+  margin-bottom: 10px;
+}
+
+.balloon__link:hover {
+  text-decoration: underline;
 }
 
 .balloon__address {
