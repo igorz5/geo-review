@@ -57,10 +57,19 @@ body {
 }
 
 .balloon {
+  max-width: 353px;
   padding-right: 10px;
 }
 
-.balloon__title {
+.balloon__address {
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 18px;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+.balloon-form__title {
   margin-top: 10px;
   margin-bottom: 20px;
   font-weight: 700;
@@ -69,12 +78,12 @@ body {
   color: var(--text-primary);
 }
 
-.balloon__inner {
+.balloon-form__inner {
   display: flex;
   flex-direction: column;
 }
 
-.balloon__input {
+.balloon-form__input {
   font-size: 14px;
   line-height: 16px;
   color: var(--text-primary);
@@ -82,28 +91,28 @@ body {
   padding: 11px;
   border-radius: 3px;
   margin-bottom: 10px;
-  width: 310px;
+  width: 100%;
 }
 
-.balloon textarea.balloon__input {
+.balloon-form textarea.balloon-form__input {
   height: 98px;
   resize: none;
 }
 
-.balloon__input:last-child {
+.balloon-form__input:last-child {
   margin-bottom: 0;
 }
 
-.balloon__input:focus {
+.balloon-form__input:focus {
   border-color: var(--border-focus-color);
 }
 
-.balloon__input::placeholder {
+.balloon-form__input::placeholder {
   color: var(--text-primary);
   opacity: 0.8;
 }
 
-.balloon__btn {
+.balloon-form__btn {
   color: var(--btn-text-color);
   font-weight: 700;
   font-size: 14px;
@@ -114,15 +123,19 @@ body {
   border-radius: 3px;
 }
 
-.balloon__btn:hover {
+.balloon-form__btn:hover {
   background-color: var(--btn-hover-color);
 }
 
-.balloon__footer {
+.balloon-form__footer {
   margin-top: 10px;
 }
 
-.balloon__review-list > li:not(:last-child) {
+.balloon-form__review-list > li:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+.review {
   margin-bottom: 20px;
 }
 

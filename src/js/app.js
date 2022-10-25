@@ -1,22 +1,58 @@
 const formTemplate = `
- <form class="balloon">
-    <ul class="balloon__review-list"></ul>
-    <h3 class="balloon__title">Отзыв:</h3>
-    <div class="balloon__inner">
-      <input class="balloon__input" type="text" placeholder="Укажите ваше имя" name="name" required>
-      <input class="balloon__input" type="text" placeholder="Укажите место" name="place" required>
-      <textarea class="balloon__input" placeholder="Оставить отзыв" name="message" required></textarea>
-    </div>
-    <div class="balloon__footer">
-      <button class="balloon__btn">Добавить</button>
+ <form class="balloon-form">
+    <h4 class="balloon-form__title">Отзыв:</h4>
+    <input class="balloon-form__input" type="text" placeholder="Укажите ваше имя" name="name" required>
+    <input class="balloon-form__input" type="text" placeholder="Укажите место" name="place" required>
+    <textarea class="balloon-form__input" placeholder="Оставить отзыв" name="message" required></textarea>
+    <div class="balloon-form__footer">
+      <button class="balloon-form__btn">Добавить</button>
     </div>
  </form>
 `;
 
-const ymapsKey = process.env.YMAPS_API_KEY;
+class Storage {
+  constructor(name) {
+    if (typeof name !== "string") {
+      throw new Error("The storage name must be a string");
+    }
 
+    this.data = [];
+    this.name = name;
+
+    this.load();
+  }
+
+  load() {
+    const item = localStorage.getItem(this.name);
+    let data = [];
+
+    if (item) {
+      try {
+        data = JSON.parse(item);
+      } catch (error) {
+        console.error(`Failed to parse storage data: ${this.name}`);
+      }
+    }
+
+    this.data = data;
+  }
+
+  save(item) {
+    this.data.push(item);
+    localStorage.setItem(this.name, JSON.stringify(this.data));
+  }
+
+  getData() {
+    return this.data;
+  }
+}
+
+const ymapsKey = process.env.YMAPS_API_KEY;
 export default class App {
   constructor(root) {
+    this.currentCoords = [0, 0];
+    this.currentId = 0;
+
     if (typeof root === "string") {
       this.root = document.querySelector(root);
       return;
@@ -26,49 +62,94 @@ export default class App {
   }
 
   onInit = () => {
+    this.storage = new Storage("georeview");
+
     this.map = new ymaps.Map(this.root, {
       center: [55.76, 37.64],
       zoom: 10,
       controls: ["zoomControl"],
     });
 
-    this.clusterer = new ymaps.Clusterer({ clusterDisableClickZoom: true });
-    this.map.geoObjects.add(this.clusterer);
-
     this.map.events.add("click", this.onClick);
     document.addEventListener("submit", this.onDocumentSubmit);
 
+    const balloonContentLayout = ymaps.templateLayoutFactory.createClass(`
+      <div class="balloon">
+        <div class="balloon__address"></div>
+        <ul class="balloon__review-list">
+          {% for obj in properties.geoObjects %}
+          <li class="balloon__review-item">
+            <div class="review">
+              <div class="review__header">
+                <div class="review__name">{{obj.properties.data.name}}</div>
+                <div class="review__place">{{obj.properties.data.place}}</div>
+                <div class="review__date">{{obj.properties.data.date}}</div>
+              </div>
+              <p class="review__message">{{obj.properties.data.message}}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        ${formTemplate}
+      </div>
+    `);
+
+    this.objectManager = new ymaps.ObjectManager({
+      clusterDisableClickZoom: true,
+      clusterize: true,
+      clusterBalloonContentLayout: balloonContentLayout,
+    });
+
+    this.objectManager.objects.events.add("click", (e) => {
+      const obj = this.objectManager.objects.getById(e.get("objectId"));
+
+      this.currentCoords = obj.geometry.coordinates;
+    });
+
+    this.objectManager.clusters.events.add("click", async (e) => {
+      const cluster = this.objectManager.clusters.getById(e.get("objectId"));
+      const objs = cluster.properties.geoObjects;
+
+      this.currentCoords = objs[0].geometry.coordinates;
+    });
+
     this.loadPlacemarks();
+
+    this.map.geoObjects.add(this.objectManager);
   };
 
-  onClick = (e) => {
-    const coords = e.get("coords");
-    const content = App.createBalloonContent(coords);
+  onClick = async (e) => {
+    if (!this.map.balloon.isOpen()) {
+      this.currentCoords = e.get("coords");
 
-    this.map.balloon.open(coords, content);
+      const address = await App.getAddress(this.currentCoords);
+      this.map.balloon.open(this.currentCoords, {
+        contentHeader: address,
+        contentBody: formTemplate,
+      });
+    } else {
+      this.map.balloon.close();
+    }
   };
 
-  onDocumentSubmit = (e) => {
-    if (e.target.className === "balloon") {
+  onDocumentSubmit = async (e) => {
+    if (e.target.className === "balloon-form") {
       e.preventDefault();
 
       const elems = e.target.elements;
-      const name = elems.name.value;
-      const place = elems.place.value;
-      const message = elems.message.value;
 
-      const coords = JSON.parse(e.target.dataset.coords);
-      App.saveReview(coords, {
-        name,
-        place,
-        message,
-      });
+      const item = {
+        name: elems.name.value,
+        place: elems.place.value,
+        message: elems.message.value,
+        date: new Date().toLocaleDateString().replace(/\//g, "."),
+        coords: this.currentCoords,
+      };
 
-      console.log(name);
+      this.storage.save(item);
 
-      this.clusterer.removeAll();
-      this.loadPlacemarks();
-
+      const placemark = await this.createPlacemark(item);
+      this.objectManager.add(placemark);
       this.map.balloon.close();
     }
   };
@@ -88,99 +169,52 @@ export default class App {
   }
 
   loadPlacemarks() {
-    const data = App.loadReviews();
-    for (const key of Object.keys(data)) {
-      this.addPlacemark(App.keyToCoords(key));
-    }
+    this.storage.getData().forEach(async (item) => {
+      const placemark = await this.createPlacemark(item);
+      this.objectManager.add(placemark);
+    });
   }
 
-  async addPlacemark(coords) {
+  async createPlacemark(data) {
+    const { coords, name, place, message, date } = data;
     const address = await App.getAddress(coords);
-    const placemark = new ymaps.Placemark(coords, {
-      clusterCaption: address,
-    });
 
-    this.clusterer.events.add("click", () => {
-      const reviews = App.loadReviewsByCoords(coords);
-      placemark.properties.set(
-        "balloonContent",
-        App.createBalloonContent(coords, reviews)
-      );
-    });
+    const reviewsLayout = `
+      <div class="balloon">
+        <div class="balloon__address">${address}</div>
+        <ul class="balloon__review-list">
+          <li class="balloon__review-item">
+            <div class="review">
+              <div class="review__header">
+                <div class="review__name">${name}</div>
+                <div class="review__place">${place}</div>
+                <div class="review__date">${date}</div>
+              </div>
+              <p class="review__message">${message}</p>
+            </div>
+          </li>
+        </ul>
+        ${formTemplate}
+      </div>
+    `;
 
-    this.clusterer.add(placemark);
-  }
-
-  static createBalloonContent(coords, reviews = []) {
-    const root = document.createElement("div");
-    root.innerHTML = formTemplate;
-
-    const form = root.querySelector(".balloon");
-    form.dataset.coords = JSON.stringify(coords);
-
-    const list = root.querySelector(".balloon__review-list");
-
-    for (const review of reviews) {
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <div class="review">
-          <div class="review__header">
-            <div class="review__name">${review.name}</div>
-            <div class="review__place">${review.place}</div>
-            <div class="review__date">${review.date}</div>
-          </div>
-          <p class="review__message">${review.message}</p>
-        </div>
-      `;
-
-      list.append(li);
-    }
-
-    return root.innerHTML;
-  }
-
-  static coordsToKey(coords) {
-    return `${coords[0]}_${coords[1]}`;
-  }
-
-  static keyToCoords(key) {
-    return key.split("_").map(Number);
-  }
-
-  static saveReview(coords, data) {
-    const item = localStorage.getItem("reviews");
-    let reviews = {};
-    if (item != null) {
-      reviews = JSON.parse(item);
-    }
-
-    const key = App.coordsToKey(coords);
-    if (!reviews[key]) {
-      reviews[key] = [];
-    }
-
-    reviews[key].push({
-      ...data,
-      date: new Date().toLocaleDateString().replace(/\//g, "."),
-    });
-
-    localStorage.setItem("reviews", JSON.stringify(reviews));
-  }
-
-  static loadReviewsByCoords(coords) {
-    const reviews = App.loadReviews();
-    const key = App.coordsToKey(coords);
-
-    return reviews[key] ? reviews[key] : [];
-  }
-
-  static loadReviews() {
-    const item = localStorage.getItem("reviews");
-    if (item == null) {
-      return {};
-    }
-
-    return JSON.parse(item);
+    return {
+      id: this.currentId++,
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: coords,
+      },
+      properties: {
+        balloonContent: reviewsLayout,
+        data: {
+          name: name,
+          place: place,
+          message: message,
+          date: date,
+        },
+      },
+    };
   }
 
   static async getAddress(coords) {
