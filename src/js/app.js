@@ -74,10 +74,12 @@ export default class App {
     document.addEventListener("submit", this.onDocumentSubmit);
 
     const openBalloon = (obj) => {
+      const objCoords = obj.geometry.coordinates;
+
       const reviews = this.storage.getData().filter((review) => {
-        const coordsA = obj.geometry.coordinates;
-        const coordsB = review.coords;
-        return coordsA[0] === coordsB[0] && coordsA[1] === coordsB[1];
+        return (
+          objCoords[0] === review.coords[0] && objCoords[1] === review.coords[1]
+        );
       });
 
       const reviewsItems = [];
@@ -111,7 +113,7 @@ export default class App {
         </div>
       `;
 
-      this.map.balloon.open(data.coords, layout);
+      this.map.balloon.open(objCoords, layout);
     };
 
     const balloonContentLayout = ymaps.templateLayoutFactory.createClass(
